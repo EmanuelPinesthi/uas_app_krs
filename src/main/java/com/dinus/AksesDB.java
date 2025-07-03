@@ -262,19 +262,29 @@ public class AksesDB {
         }		
     }
     
-    // ========== KRS ==========
+    // ========== KRS (Fixed version) ==========
     public static ObservableList<Krs> getDataKrs(){
         ObservableList<Krs> listKrs = FXCollections.observableArrayList();
         try {
             Connection c = KoneksiDB.getConn();
-            String sql="SELECT k.kode_mk,k.kelas,k.nim,m.nama_mk,mh.nama,k.status " +
-                      "FROM krs k,matakuliah m,mhs mh " +
-                      "WHERE k.kode_mk=m.kode_mk AND k.nim=mh.nim";
-            PreparedStatement ps =c.prepareStatement(sql);
+            String sql = "SELECT CONCAT(k.kode_mk, '-', k.kelas) as kode_jadwal, " +
+                        "k.kode_mk, m.nama_mk, k.nim, mh.nama, k.kelas, k.status " +
+                        "FROM krs k " +
+                        "JOIN matakuliah m ON k.kode_mk = m.kode_mk " +
+                        "JOIN mhs mh ON k.nim = mh.nim";
+            PreparedStatement ps = c.prepareStatement(sql);
             ResultSet rs = ps.executeQuery();
             while(rs.next()){
-                Krs k = new Krs(rs.getString("kode_mk"),rs.getString("kelas"),rs.getString("nim"),
-                               rs.getString("nama_mk"),rs.getString("nama"),rs.getString("status"));
+                // Constructor: kodeJadwal, kodeMk, namaMk, nim, namaMhs, kelas, status
+                Krs k = new Krs(
+                    rs.getString("kode_jadwal"),
+                    rs.getString("kode_mk"),
+                    rs.getString("nama_mk"),
+                    rs.getString("nim"),
+                    rs.getString("nama"),
+                    rs.getString("kelas"),
+                    rs.getString("status")
+                );
                 listKrs.add(k);
             }
             return listKrs;
@@ -284,51 +294,103 @@ public class AksesDB {
         }
     }
     
-    public static void addDataKrs(String kodeMk,String kelas,String nim,String status){
-        String sql="insert into krs(kode_mk,kelas,nim,status) values (?,?,?,?)";
+    public static void addDataKrs(String kodeMk, String kelas, String nim, String status){
+        String sql = "INSERT INTO krs(kode_mk, kelas, nim, status) VALUES (?,?,?,?)";
         try {
             Connection c = KoneksiDB.getConn();
             PreparedStatement st = c.prepareStatement(sql);        
-            st.setString(1,kodeMk);                
-            st.setString(2,kelas);                				    
-            st.setString(3,nim);
-            st.setString(4,status);
+            st.setString(1, kodeMk);
+            st.setString(2, kelas);
+            st.setString(3, nim);
+            st.setString(4, status);
             st.executeUpdate();
         } catch (SQLException e) {
             throw new RuntimeException(e);
         }		
     }
     
-    public static void updateDataKrs(String kodeMk,String kelas,String nim,String status,String kodeMkLama,String kelasLama,String nimLama){
-        String sql="update krs set kode_mk=?,kelas=?,nim=?,status=? where kode_mk=? and kelas=? and nim=?";
+    public static void updateDataKrs(String kodeMk, String kelas, String nim, String status, String oldKodeMk, String oldKelas, String oldNim){
+        String sql = "UPDATE krs SET kode_mk=?, kelas=?, nim=?, status=? WHERE kode_mk=? AND kelas=? AND nim=?";
         try {
             Connection c = KoneksiDB.getConn();
             PreparedStatement st = c.prepareStatement(sql);        
-            st.setString(1,kodeMk);
-            st.setString(2,kelas);
-            st.setString(3,nim);
-            st.setString(4,status);
-            st.setString(5,kodeMkLama);
-            st.setString(6,kelasLama);
-            st.setString(7,nimLama);
+            st.setString(1, kodeMk);
+            st.setString(2, kelas);
+            st.setString(3, nim);
+            st.setString(4, status);
+            st.setString(5, oldKodeMk);
+            st.setString(6, oldKelas);
+            st.setString(7, oldNim);
             st.executeUpdate();
         } catch (SQLException e) {
             throw new RuntimeException(e);
         }		
     }
     
-    public static void delDataKrs(String kodeMk,String kelas,String nim){
-        String sql="delete from krs where kode_mk=? and kelas=? and nim=?";
+    public static void delDataKrs(String kodeMk, String kelas, String nim){
+        String sql = "DELETE FROM krs WHERE kode_mk=? AND kelas=? AND nim=?";
         try {
             Connection c = KoneksiDB.getConn();
             PreparedStatement st = c.prepareStatement(sql);        
-            st.setString(1,kodeMk);
-            st.setString(2,kelas);
-            st.setString(3,nim);
+            st.setString(1, kodeMk);
+            st.setString(2, kelas);
+            st.setString(3, nim);
             st.executeUpdate();
         } catch (SQLException e) {
             throw new RuntimeException(e);
         }		
+    }
+    
+    // ========== SEARCH METHODS ==========
+    public static ObservableList<JadwalSearch> getDataJadwalSearch(){
+        ObservableList<JadwalSearch> listJadwal = FXCollections.observableArrayList();
+        try {
+            Connection c = KoneksiDB.getConn();
+            String sql = "SELECT CONCAT(j.kode_mk, '-', j.kelas) as kode_jadwal, " +
+                        "j.kode_mk, m.nama_mk, j.kelas, j.hari, j.jam, j.ruang " +
+                        "FROM jadwal j " +
+                        "JOIN matakuliah m ON j.kode_mk = m.kode_mk";
+            PreparedStatement ps = c.prepareStatement(sql);
+            ResultSet rs = ps.executeQuery();
+            while(rs.next()){
+                JadwalSearch j = new JadwalSearch(
+                    rs.getString("kode_jadwal"),
+                    rs.getString("kode_mk"),
+                    rs.getString("nama_mk"),
+                    rs.getString("kelas"),
+                    rs.getString("hari"),
+                    rs.getString("jam"),
+                    rs.getString("ruang")
+                );
+                listJadwal.add(j);
+            }
+            return listJadwal;
+        }catch (SQLException ex) {
+            Logger.getLogger(AksesDB.class.getName()).log(Level.SEVERE, null, ex);
+            return null;
+        }
+    }
+    
+    public static ObservableList<MhsSearch> getDataMhsSearch(){
+        ObservableList<MhsSearch> listMhs = FXCollections.observableArrayList();
+        try {
+            Connection c = KoneksiDB.getConn();
+            String sql = "SELECT nim, nama, alamat FROM mhs";
+            PreparedStatement ps = c.prepareStatement(sql);
+            ResultSet rs = ps.executeQuery();
+            while(rs.next()){
+                MhsSearch m = new MhsSearch(
+                    rs.getString("nim"),
+                    rs.getString("nama"),
+                    rs.getString("alamat")
+                );
+                listMhs.add(m);
+            }
+            return listMhs;
+        }catch (SQLException ex) {
+            Logger.getLogger(AksesDB.class.getName()).log(Level.SEVERE, null, ex);
+            return null;
+        }
     }
     
     // ========== USER LOGIN ==========

@@ -14,6 +14,7 @@ import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
 import javafx.fxml.FXMLLoader;
 import javafx.fxml.Initializable;
+import javafx.scene.Node;
 import javafx.scene.Parent;
 import javafx.scene.Scene;
 import javafx.scene.control.Alert;
@@ -26,7 +27,6 @@ import javafx.scene.control.TextField;
 import javafx.scene.control.cell.PropertyValueFactory;
 import javafx.stage.Modality;
 import javafx.stage.Stage;
-import javafx.scene.Node;
 
 public class KrsController implements Initializable {
     ObservableList<Krs> listKrs;
@@ -35,9 +35,6 @@ public class KrsController implements Initializable {
     @FXML
     private Button btnAdd;
 
-    @FXML
-    private TextField tfCari;
-   
     @FXML
     private Button btnCancel;
 
@@ -48,28 +45,31 @@ public class KrsController implements Initializable {
     private Button btnEdit;
 
     @FXML
-    private Button btnUpdate;
-
-    @FXML
-    private Button btnPilihMatkul;
+    private Button btnPilihJadwal;
 
     @FXML
     private Button btnPilihMhs;
 
     @FXML
+    private Button btnUpdate;
+
+    @FXML
+    private ComboBox<String> cbStatus;
+
+    @FXML
+    private TableColumn<Krs, String> kodeJadwal;
+
+    @FXML
     private TableColumn<Krs, String> kodeMk;
+
+    @FXML
+    private TableColumn<Krs, String> namaMhs;
 
     @FXML
     private TableColumn<Krs, String> namaMk;
 
     @FXML
-    private TableColumn<Krs, String> kelas;
-
-    @FXML
     private TableColumn<Krs, String> nim;
-
-    @FXML
-    private TableColumn<Krs, String> namaMhs;
 
     @FXML
     private TableColumn<Krs, String> status;
@@ -78,69 +78,109 @@ public class KrsController implements Initializable {
     private TableView<Krs> tbKrs;
 
     @FXML
-    private TextField tfKodeMk;
+    private TextField tfCari;
 
     @FXML
-    private TextField tfNamaMk;
-
-    @FXML
-    private TextField tfKelas;
+    private TextField tfKodeJadwal;
 
     @FXML
     private TextField tfNim;
 
     @FXML
-    private TextField tfNamaMhs;
+    private TextField tfNmMatkul;
 
     @FXML
-    private ComboBox<String> cbStatus;
-    
+    private TextField tfNmMhs;
+
+    // Variables untuk menyimpan data yang dipilih
+    private String selectedKodeMk;
+    private String selectedKelas;
+    private String originalKodeMk;
+    private String originalKelas;
+    private String originalNim;
+
+    @Override
+    public void initialize(URL url, ResourceBundle resourceBundle) {
+        listKrs = FXCollections.observableArrayList();
+        initTabel();
+        initComboBox();
+        loadData();
+        setFilter();
+        buttonAktif(false);
+        teksAktif(false);
+        flagEdit = false;
+        
+        // Set initial state
+        clearTeks();
+        
+        // Add selection listener to table
+        tbKrs.getSelectionModel().selectedItemProperty().addListener((obs, oldSelection, newSelection) -> {
+            if (newSelection != null && !flagEdit) {
+                // Enable edit and delete buttons when an item is selected
+                btnEdit.setDisable(false);
+                btnDelete.setDisable(false);
+            }
+        });
+    }
+
+    private void initComboBox() {
+        cbStatus.getItems().addAll("baru", "ulang");
+        cbStatus.setValue("baru");
+    }
+
     @FXML
-    void pilihMatkul(ActionEvent event) {
+    void pilihJadwal(ActionEvent event) {
         Stage stage = new Stage();
-        Parent root;       
+        Parent root;
         try {
-            root = FXMLLoader.load(MatkulSearchController.class.getResource("fmatkulSearch.fxml"));
+            root = FXMLLoader.load(JadwalSearchKrsController.class.getResource("fJadwalSearchKrs.fxml"));
             stage.setScene(new Scene(root));
-            stage.setTitle("Daftar Matakuliah");
+            stage.setTitle("Daftar Jadwal");
             stage.initModality(Modality.WINDOW_MODAL);
-            stage.initOwner(((Node)event.getSource()).getScene().getWindow());
-            stage.showAndWait();         
-            Matakuliah m;
-            m = (Matakuliah) stage.getUserData();            
-            tfKodeMk.setText(m.getKodeMk());
-            tfNamaMk.setText(m.getNamaMk());
+            stage.initOwner(((Node) event.getSource()).getScene().getWindow());
+            stage.showAndWait();
+            JadwalSearch j;
+            j = (JadwalSearch) stage.getUserData();
+            if (j != null) {
+                tfKodeJadwal.setText(j.getKodeJadwal());
+                tfNmMatkul.setText(j.getNamaMk());
+                selectedKodeMk = j.getKodeMk();
+                selectedKelas = j.getKelas();
+            }
         } catch (IOException ex) {
             Logger.getLogger(KrsController.class.getName()).log(Level.SEVERE, null, ex);
-        }         
+        }
     }
 
     @FXML
     void pilihMhs(ActionEvent event) {
         Stage stage = new Stage();
-        Parent root;       
+        Parent root;
         try {
-            root = FXMLLoader.load(MhsSearchController.class.getResource("fmhsSearch.fxml"));
+            root = FXMLLoader.load(MhsSearchKrsController.class.getResource("fMhsSearchKrs.fxml"));
             stage.setScene(new Scene(root));
             stage.setTitle("Daftar Mahasiswa");
             stage.initModality(Modality.WINDOW_MODAL);
-            stage.initOwner(((Node)event.getSource()).getScene().getWindow());
-            stage.showAndWait();         
-            Mhs m;
-            m = (Mhs) stage.getUserData();            
-            tfNim.setText(m.getNim());
-            tfNamaMhs.setText(m.getNama());
+            stage.initOwner(((Node) event.getSource()).getScene().getWindow());
+            stage.showAndWait();
+            MhsSearch m;
+            m = (MhsSearch) stage.getUserData();
+            if (m != null) {
+                tfNim.setText(m.getNim());
+                tfNmMhs.setText(m.getNama());
+            }
         } catch (IOException ex) {
             Logger.getLogger(KrsController.class.getName()).log(Level.SEVERE, null, ex);
-        }         
+        }
     }
-    
+
     @FXML
     void add(ActionEvent event) {
         flagEdit = false;
         teksAktif(true);
         buttonAktif(true);
-        tfKodeMk.requestFocus();
+        clearTeks();
+        tfKodeJadwal.requestFocus();
     }
 
     @FXML
@@ -152,145 +192,201 @@ public class KrsController implements Initializable {
 
     @FXML
     void delete(ActionEvent event) {
-        Alert alert = new Alert(Alert.AlertType.CONFIRMATION, "hapus data ?", ButtonType.YES, ButtonType.CANCEL);
+        int selectedIndex = tbKrs.getSelectionModel().getSelectedIndex();
+        if (selectedIndex < 0) {
+            Alert alert = new Alert(Alert.AlertType.WARNING);
+            alert.setContentText("Silakan pilih data yang akan dihapus!");
+            alert.show();
+            return;
+        }
+        
+        Alert alert = new Alert(Alert.AlertType.CONFIRMATION, "Hapus data KRS?", ButtonType.YES, ButtonType.CANCEL);
         alert.showAndWait();
         if (alert.getResult() == ButtonType.YES) {
-            int idx = tbKrs.getSelectionModel().getSelectedIndex();            
-            String vKodeMk = tbKrs.getItems().get(idx).getKodeMk();
-            String vKelas = tbKrs.getItems().get(idx).getKelas();
-            String vNim = tbKrs.getItems().get(idx).getNim();
-            AksesDB.delDataKrs(vKodeMk, vKelas, vNim);
+            Krs selectedKrs = tbKrs.getItems().get(selectedIndex);
+            AksesDB.delDataKrs(selectedKrs.getKodeMk(), selectedKrs.getKelas(), selectedKrs.getNim());
+            
             Alert alert2 = new Alert(Alert.AlertType.INFORMATION);
             alert2.setContentText("Delete Data Sukses..");
             alert2.show();
-            loadData();                       
+            loadData();
         }
     }
 
     @FXML
     void edit(ActionEvent event) {
+        int selectedIndex = tbKrs.getSelectionModel().getSelectedIndex();
+        if (selectedIndex < 0) {
+            Alert alert = new Alert(Alert.AlertType.WARNING);
+            alert.setContentText("Silakan pilih data yang akan diedit!");
+            alert.show();
+            return;
+        }
+        
         buttonAktif(true);
         teksAktif(true);
-        flagEdit = true;			
-        int idx = tbKrs.getSelectionModel().getSelectedIndex();
-        tfKodeMk.setText(tbKrs.getItems().get(idx).getKodeMk());
-        tfNamaMk.setText(tbKrs.getItems().get(idx).getNamaMk());
-        tfKelas.setText(tbKrs.getItems().get(idx).getKelas());
-        tfNim.setText(tbKrs.getItems().get(idx).getNim());
-        tfNamaMhs.setText(tbKrs.getItems().get(idx).getNamaMhs());
-        cbStatus.setValue(tbKrs.getItems().get(idx).getStatus());
-        tfKodeMk.requestFocus();
+        flagEdit = true;
+        
+        Krs selectedKrs = tbKrs.getItems().get(selectedIndex);
+        
+        // Set form fields
+        tfKodeJadwal.setText(selectedKrs.getKodeJadwal());
+        tfNmMatkul.setText(selectedKrs.getNamaMk());
+        tfNim.setText(selectedKrs.getNim());
+        tfNmMhs.setText(selectedKrs.getNamaMhs());
+        cbStatus.setValue(selectedKrs.getStatus());
+        
+        // Set selected values for new data
+        selectedKodeMk = selectedKrs.getKodeMk();
+        selectedKelas = selectedKrs.getKelas();
+        
+        // Store original values for update
+        originalKodeMk = selectedKrs.getKodeMk();
+        originalKelas = selectedKrs.getKelas();
+        originalNim = selectedKrs.getNim();
+        
+        tfKodeJadwal.requestFocus();
     }
 
     @FXML
     void update(ActionEvent event) {
-        String vKodeMk, vKelas, vNim, vStatus;
-        String vKodeMkLama, vKelasLama, vNimLama;
+        // Validasi input
+        if (selectedKodeMk == null || selectedKelas == null || tfNim.getText().trim().isEmpty()) {
+            Alert alert = new Alert(Alert.AlertType.ERROR);
+            alert.setContentText("Silakan lengkapi semua data!");
+            alert.show();
+            return;
+        }
         
-        vKodeMk = tfKodeMk.getText();
-        vKelas = tfKelas.getText();
-        vNim = tfNim.getText();
-        vStatus = cbStatus.getValue();
+        String nim = tfNim.getText().trim();
+        String status = cbStatus.getValue();
 
         if (flagEdit == false) {
-            AksesDB.addDataKrs(vKodeMk, vKelas, vNim, vStatus);	
-            Alert alert = new Alert(Alert.AlertType.INFORMATION);
-            alert.setContentText("Insert Data Sukses..");
-            alert.show();			
+            // Add new data
+            try {
+                AksesDB.addDataKrs(selectedKodeMk, selectedKelas, nim, status);
+                Alert alert = new Alert(Alert.AlertType.INFORMATION);
+                alert.setContentText("Insert Data Sukses..");
+                alert.show();
+            } catch (Exception e) {
+                Alert alert = new Alert(Alert.AlertType.ERROR);
+                alert.setContentText("Error: " + e.getMessage());
+                alert.show();
+                return;
+            }
         } else {
-            int idx = tbKrs.getSelectionModel().getSelectedIndex();
-            vKodeMkLama = tbKrs.getItems().get(idx).getKodeMk();
-            vKelasLama = tbKrs.getItems().get(idx).getKelas();
-            vNimLama = tbKrs.getItems().get(idx).getNim();
-            AksesDB.updateDataKrs(vKodeMk, vKelas, vNim, vStatus, vKodeMkLama, vKelasLama, vNimLama);
-            Alert alert = new Alert(Alert.AlertType.INFORMATION);
-            alert.setContentText("Update Data Berhasil");
-            alert.show();
+            // Update existing data
+            try {
+                AksesDB.updateDataKrs(selectedKodeMk, selectedKelas, nim, status, 
+                                    originalKodeMk, originalKelas, originalNim);
+                Alert alert = new Alert(Alert.AlertType.INFORMATION);
+                alert.setContentText("Update Data Berhasil");
+                alert.show();
+            } catch (Exception e) {
+                Alert alert = new Alert(Alert.AlertType.ERROR);
+                alert.setContentText("Error: " + e.getMessage());
+                alert.show();
+                return;
+            }
         }
+        
         loadData();
         flagEdit = false;
         teksAktif(false);
         clearTeks();
-        buttonAktif(false);    
+        buttonAktif(false);
     }
-    
+
     public void buttonAktif(boolean nonAktif) {
         btnAdd.setDisable(nonAktif);
-        btnEdit.setDisable(nonAktif);
-        btnDelete.setDisable(nonAktif);
+        btnEdit.setDisable(true); // Will be enabled when selecting from table
+        btnDelete.setDisable(true); // Will be enabled when selecting from table
         btnUpdate.setDisable(!nonAktif);
         btnCancel.setDisable(!nonAktif);
-    }     
-    
+    }
+
     public void teksAktif(boolean aktif) {
-        tfKodeMk.setEditable(aktif);
-        tfNamaMk.setEditable(aktif);
-        tfKelas.setEditable(aktif);
-        tfNim.setEditable(aktif);
-        tfNamaMhs.setEditable(aktif);
+        // Jadwal fields - hanya bisa diedit melalui dialog pencarian
+        tfKodeJadwal.setEditable(false);
+        tfNmMatkul.setEditable(false);
+        btnPilihJadwal.setDisable(!aktif);
+        
+        // Mahasiswa fields - hanya bisa diedit melalui dialog pencarian  
+        tfNim.setEditable(false);
+        tfNmMhs.setEditable(false);
+        btnPilihMhs.setDisable(!aktif);
+        
+        // Status - bisa diedit langsung
         cbStatus.setDisable(!aktif);
     }
-    
+
     public void clearTeks() {
-        tfKodeMk.setText("");
-        tfNamaMk.setText("");
-        tfKelas.setText("");
+        tfKodeJadwal.setText("");
+        tfNmMatkul.setText("");
         tfNim.setText("");
-        tfNamaMhs.setText("");
+        tfNmMhs.setText("");
         cbStatus.setValue("baru");
-    }   
-    
+        selectedKodeMk = null;
+        selectedKelas = null;
+        originalKodeMk = null;
+        originalKelas = null;
+        originalNim = null;
+    }
+
     void initTabel() {
+        kodeJadwal.setCellValueFactory(new PropertyValueFactory<Krs, String>("kodeJadwal"));
         kodeMk.setCellValueFactory(new PropertyValueFactory<Krs, String>("kodeMk"));
         namaMk.setCellValueFactory(new PropertyValueFactory<Krs, String>("namaMk"));
-        kelas.setCellValueFactory(new PropertyValueFactory<Krs, String>("kelas"));
         nim.setCellValueFactory(new PropertyValueFactory<Krs, String>("nim"));
         namaMhs.setCellValueFactory(new PropertyValueFactory<Krs, String>("namaMhs"));
         status.setCellValueFactory(new PropertyValueFactory<Krs, String>("status"));
-    } 
-    
-    @Override
-    public void initialize(URL url, ResourceBundle resourceBundle) {
-        listKrs = FXCollections.observableArrayList();        
-        initTabel();
-        loadData();
-        setFilter();
-        buttonAktif(false);
-        teksAktif(false);
-        flagEdit = false;
-        
-        // Initialize ComboBox
-        cbStatus.getItems().addAll("baru", "ulang");
-        cbStatus.setValue("baru");
-    }      
-    
+    }
+
     void loadData() {
         listKrs = AksesDB.getDataKrs();
-        tbKrs.setItems(listKrs);
-    }      
-    
+        if (listKrs != null) {
+            tbKrs.setItems(listKrs);
+            setFilter(); // Refresh the filter
+        }
+    }
+
     void setFilter() {
         FilteredList<Krs> filterData = new FilteredList<>(listKrs, b -> true);
         tfCari.textProperty().addListener((observable, oldValue, newValue) -> {
-            filterData.setPredicate(Krs -> {
+            filterData.setPredicate(krs -> {
                 if (newValue.isEmpty() || newValue == null) {
                     return true;
                 }
                 String searchKeyword = newValue.toLowerCase();
-                if (Krs.getNamaMk().toLowerCase().indexOf(searchKeyword) > -1) {
+                if (krs.getNamaMk().toLowerCase().indexOf(searchKeyword) > -1) {
                     return true;
-                } else if (Krs.getKodeMk().toLowerCase().indexOf(searchKeyword) > -1) {
+                } else if (krs.getKodeMk().toLowerCase().indexOf(searchKeyword) > -1) {
                     return true;
-                } else if (Krs.getNamaMhs().toLowerCase().indexOf(searchKeyword) > -1) {
+                } else if (krs.getNamaMhs().toLowerCase().indexOf(searchKeyword) > -1) {
                     return true;
-                } else if (Krs.getNim().toLowerCase().indexOf(searchKeyword) > -1) {
+                } else if (krs.getNim().toLowerCase().indexOf(searchKeyword) > -1) {
                     return true;
                 } else
                     return false;
-            });           
+            });
         });
         SortedList<Krs> sortedData = new SortedList<>(filterData);
         sortedData.comparatorProperty().bind(tbKrs.comparatorProperty());
         tbKrs.setItems(sortedData);
-    }      
+    }
+
+    // Helper methods untuk mengekstrak kode_mk dan kelas dari kode jadwal
+    private String getKodeMkFromKodeJadwal(String kodeJadwal) {
+        if (kodeJadwal != null && kodeJadwal.contains("-")) {
+            return kodeJadwal.split("-")[0];
+        }
+        return "";
+    }
+
+    private String getKelasFromKodeJadwal(String kodeJadwal) {
+        if (kodeJadwal != null && kodeJadwal.contains("-")) {
+            return kodeJadwal.split("-")[1];
+        }
+        return "";
+    }
 }
