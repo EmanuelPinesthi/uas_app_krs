@@ -28,7 +28,7 @@ import javafx.stage.Stage;
 import javafx.scene.Node;
 
 public class JadwalController implements Initializable {
-    ObservableList<Jadwal> listJadwal ;
+    ObservableList<Jadwal> listJadwal;
     boolean flagEdit;
 
     @FXML
@@ -53,6 +53,9 @@ public class JadwalController implements Initializable {
     private Button btnPilih;
 
     @FXML
+    private Button btnPilihDosen;
+
+    @FXML
     private TableColumn<Jadwal, String> hari;
 
     @FXML
@@ -69,6 +72,9 @@ public class JadwalController implements Initializable {
 
     @FXML
     private TableColumn<Jadwal, String> ruang;
+
+    @FXML
+    private TableColumn<Jadwal, String> namaDsn;
 
     @FXML
     private TableView<Jadwal> tbJadwal;
@@ -90,31 +96,56 @@ public class JadwalController implements Initializable {
 
     @FXML
     private TextField tfRuang;
+
+    @FXML
+    private TextField tfKodeDosen;
+
+    @FXML
+    private TextField tfNmDosen;
     
     @FXML
     void pilihMatkul(ActionEvent event) {
-        //
-       Stage stage = new Stage();
-       Parent root;       
+        Stage stage = new Stage();
+        Parent root;       
         try {
             root = FXMLLoader.load(MatkulSearchController.class.getResource("fmatkulSearch.fxml"));
             stage.setScene(new Scene(root));
             stage.setTitle("Daftar Matakuliah");
             stage.initModality(Modality.WINDOW_MODAL);
-            stage.initOwner(((Node)event.getSource()).getScene().getWindow() );
+            stage.initOwner(((Node)event.getSource()).getScene().getWindow());
             stage.showAndWait();         
-            Matakuliah m ;
+            Matakuliah m;
             m = (Matakuliah) stage.getUserData();            
             tfKodematkul.setText(m.getKodeMk());
             tfNmMatkul.setText(m.getNamaMk());
         } catch (IOException ex) {
             Logger.getLogger(JadwalController.class.getName()).log(Level.SEVERE, null, ex);
         }         
-        //
     }
+
+    @FXML
+    void pilihDosen(ActionEvent event) {
+        Stage stage = new Stage();
+        Parent root;       
+        try {
+            root = FXMLLoader.load(DosenSearchController.class.getResource("fdosenSearch.fxml"));
+            stage.setScene(new Scene(root));
+            stage.setTitle("Daftar Dosen");
+            stage.initModality(Modality.WINDOW_MODAL);
+            stage.initOwner(((Node)event.getSource()).getScene().getWindow());
+            stage.showAndWait();         
+            Dosen d;
+            d = (Dosen) stage.getUserData();            
+            tfKodeDosen.setText(d.getKodeDsn());
+            tfNmDosen.setText(d.getNamaDsn());
+        } catch (IOException ex) {
+            Logger.getLogger(JadwalController.class.getName()).log(Level.SEVERE, null, ex);
+        }         
+    }
+    
     @FXML
     void add(ActionEvent event) {
-        flagEdit=false;
+        flagEdit = false;
         teksAktif(true);
         buttonAktif(true);
         tfKodematkul.requestFocus();
@@ -129,13 +160,13 @@ public class JadwalController implements Initializable {
 
     @FXML
     void delete(ActionEvent event) {
-        Alert alert = new Alert(Alert.AlertType.CONFIRMATION, "hapus data ?", ButtonType.YES,  ButtonType.CANCEL);
+        Alert alert = new Alert(Alert.AlertType.CONFIRMATION, "hapus data ?", ButtonType.YES, ButtonType.CANCEL);
         alert.showAndWait();
         if (alert.getResult() == ButtonType.YES) {
-            int idx=tbJadwal.getSelectionModel().getSelectedIndex();            
-            String vKodeMk=tbJadwal.getItems().get(idx).getKodeMk();
-            String vKelas=tbJadwal.getItems().get(idx).getKelas();
-            AksesDB.delDataJadwal(vKodeMk,vKelas);
+            int idx = tbJadwal.getSelectionModel().getSelectedIndex();            
+            String vKodeMk = tbJadwal.getItems().get(idx).getKodeMk();
+            String vKelas = tbJadwal.getItems().get(idx).getKelas();
+            AksesDB.delDataJadwal(vKodeMk, vKelas);
             Alert alert2 = new Alert(Alert.AlertType.INFORMATION);
             alert2.setContentText("Delete Data Sukses..");
             alert2.show();
@@ -147,109 +178,123 @@ public class JadwalController implements Initializable {
     void edit(ActionEvent event) {
         buttonAktif(true);
         teksAktif(true);
-        flagEdit=true;			
-        int idx=tbJadwal.getSelectionModel().getSelectedIndex();
+        flagEdit = true;			
+        int idx = tbJadwal.getSelectionModel().getSelectedIndex();
         tfKodematkul.setText(tbJadwal.getItems().get(idx).getKodeMk());
         tfKelas.setText(tbJadwal.getItems().get(idx).getKelas());
         tfNmMatkul.setText(tbJadwal.getItems().get(idx).getNamaMk());        
         tfHari.setText(tbJadwal.getItems().get(idx).getHari());
         tfJam.setText(tbJadwal.getItems().get(idx).getJam());
         tfRuang.setText(tbJadwal.getItems().get(idx).getRuang());
+        tfKodeDosen.setText(tbJadwal.getItems().get(idx).getKodeDsn());
+        tfNmDosen.setText(tbJadwal.getItems().get(idx).getNamaDsn());
         tfKodematkul.requestFocus();
     }
 
     @FXML
     void update(ActionEvent event) {
-       String vKelas,vKodeMk,vHari,vJam,vRuang;
-        vKelas=tfKelas.getText();
-        vKodeMk=tfKodematkul.getText();
-        //vNamaMk=tfNmMatkul.getText();
-        vHari=tfHari.getText();
-        vJam=tfJam.getText();
-        vRuang=tfRuang.getText();
+        String vKelas, vKodeMk, vHari, vJam, vRuang, vKodeDsn;
+        vKelas = tfKelas.getText();
+        vKodeMk = tfKodematkul.getText();
+        vHari = tfHari.getText();
+        vJam = tfJam.getText();
+        vRuang = tfRuang.getText();
+        vKodeDsn = tfKodeDosen.getText();
 
-        if (flagEdit==false){
-            AksesDB.addDataJadwal( vKodeMk,vKelas, vHari, vJam, vRuang);	
+        if (flagEdit == false) {
+            AksesDB.addDataJadwal(vKodeMk, vKelas, vHari, vJam, vRuang, vKodeDsn);	
             Alert alert = new Alert(Alert.AlertType.INFORMATION);
             alert.setContentText("Insert Data Sukses..");
             alert.show();			
-        }else {
-            int idx=tbJadwal.getSelectionModel().getSelectedIndex();
-            vKelas=tbJadwal.getItems().get(idx).getKelas();
-            AksesDB.updateDataJadwal(vKodeMk, vKelas, vHari, vJam, vRuang);
+        } else {
+            int idx = tbJadwal.getSelectionModel().getSelectedIndex();
+            vKelas = tbJadwal.getItems().get(idx).getKelas();
+            AksesDB.updateDataJadwal(vKodeMk, vKelas, vHari, vJam, vRuang, vKodeDsn);
             Alert alert = new Alert(Alert.AlertType.INFORMATION);
             alert.setContentText("Update Data Berhasil");
             alert.show();
         }
         loadData();
-        flagEdit=false;
+        flagEdit = false;
         teksAktif(false);
         clearTeks();
         buttonAktif(false);    
     }
-	public void buttonAktif(boolean nonAktif){
-		btnAdd.setDisable(nonAktif);
-		btnEdit.setDisable(nonAktif);
-		btnDelete.setDisable(nonAktif);
-		btnUpdate.setDisable(!nonAktif);
-		btnCancel.setDisable(!nonAktif);
-	}     
-	public void teksAktif(boolean aktif){
-		tfKelas.setEditable(aktif);
-		tfKodematkul.setEditable(aktif);
-		tfNmMatkul.setEditable(aktif);
+    
+    public void buttonAktif(boolean nonAktif) {
+        btnAdd.setDisable(nonAktif);
+        btnEdit.setDisable(nonAktif);
+        btnDelete.setDisable(nonAktif);
+        btnUpdate.setDisable(!nonAktif);
+        btnCancel.setDisable(!nonAktif);
+    }     
+    
+    public void teksAktif(boolean aktif) {
+        tfKelas.setEditable(aktif);
+        tfKodematkul.setEditable(aktif);
+        tfNmMatkul.setEditable(aktif);
         tfHari.setEditable(aktif);
         tfJam.setEditable(aktif);
         tfRuang.setEditable(aktif);
-	}
-	public void clearTeks(){
-		tfKelas.setText("");
-		tfKodematkul.setText("");
-		tfNmMatkul.setText("");
+        tfKodeDosen.setEditable(aktif);
+        tfNmDosen.setEditable(aktif);
+    }
+    
+    public void clearTeks() {
+        tfKelas.setText("");
+        tfKodematkul.setText("");
+        tfNmMatkul.setText("");
         tfHari.setText("");
         tfJam.setText("");
         tfRuang.setText("");
-	}   
-    void initTabel(){
-        kelas.setCellValueFactory(new PropertyValueFactory<Jadwal,String>("kelas"));
-        kodeMk.setCellValueFactory(new PropertyValueFactory<Jadwal,String>("kodeMk"));
-        namaMk.setCellValueFactory(new PropertyValueFactory<Jadwal,String>("namaMk"));
-        hari.setCellValueFactory(new PropertyValueFactory<Jadwal,String>("hari"));
-        jam.setCellValueFactory(new PropertyValueFactory<Jadwal,String>("jam"));
-        ruang.setCellValueFactory(new PropertyValueFactory<Jadwal,String>("ruang"));
+        tfKodeDosen.setText("");
+        tfNmDosen.setText("");
+    }   
+    
+    void initTabel() {
+        kelas.setCellValueFactory(new PropertyValueFactory<Jadwal, String>("kelas"));
+        kodeMk.setCellValueFactory(new PropertyValueFactory<Jadwal, String>("kodeMk"));
+        namaMk.setCellValueFactory(new PropertyValueFactory<Jadwal, String>("namaMk"));
+        hari.setCellValueFactory(new PropertyValueFactory<Jadwal, String>("hari"));
+        jam.setCellValueFactory(new PropertyValueFactory<Jadwal, String>("jam"));
+        ruang.setCellValueFactory(new PropertyValueFactory<Jadwal, String>("ruang"));
+        namaDsn.setCellValueFactory(new PropertyValueFactory<Jadwal, String>("namaDsn"));
     } 
+    
     @Override
     public void initialize(URL url, ResourceBundle resourceBundle) {
-        listJadwal = FXCollections.observableArrayList() ;        
+        listJadwal = FXCollections.observableArrayList();        
         initTabel();
         loadData();
         setFilter();
         buttonAktif(false);
         teksAktif(false);
-        flagEdit=false;
+        flagEdit = false;
     }      
-    void loadData(){
-        listJadwal=AksesDB.getDataJadwal();
+    
+    void loadData() {
+        listJadwal = AksesDB.getDataJadwal();
         tbJadwal.setItems(listJadwal);
     }      
-    void setFilter(){
-        FilteredList<Jadwal> filterData= new FilteredList<>(listJadwal,b->true);
-        tfCari.textProperty().addListener((observable,oldValue,newValue)->{
-        filterData.setPredicate(Jadwal->{
-          if (newValue.isEmpty()  || newValue==null){
-             return true;
-           }
-          String searchKeyword=newValue.toLowerCase();
-          if (Jadwal.getNamaMk().toLowerCase().indexOf(searchKeyword)> -1){
-              return true;
-          }else if (Jadwal.getKodeMk().toLowerCase().indexOf(searchKeyword)>-1){
-              return true;
-          }else
-              return false;
-       });           
-       });
-       SortedList<Jadwal> sortedData = new SortedList<>(filterData);
-       sortedData.comparatorProperty().bind(tbJadwal.comparatorProperty());
-       tbJadwal.setItems(sortedData);
+    
+    void setFilter() {
+        FilteredList<Jadwal> filterData = new FilteredList<>(listJadwal, b -> true);
+        tfCari.textProperty().addListener((observable, oldValue, newValue) -> {
+            filterData.setPredicate(Jadwal -> {
+                if (newValue.isEmpty() || newValue == null) {
+                    return true;
+                }
+                String searchKeyword = newValue.toLowerCase();
+                if (Jadwal.getNamaMk().toLowerCase().indexOf(searchKeyword) > -1) {
+                    return true;
+                } else if (Jadwal.getKodeMk().toLowerCase().indexOf(searchKeyword) > -1) {
+                    return true;
+                } else
+                    return false;
+            });           
+        });
+        SortedList<Jadwal> sortedData = new SortedList<>(filterData);
+        sortedData.comparatorProperty().bind(tbJadwal.comparatorProperty());
+        tbJadwal.setItems(sortedData);
     }      
 }

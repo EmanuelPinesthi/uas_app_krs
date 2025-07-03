@@ -7,7 +7,7 @@ import java.sql.SQLException;
 public class KoneksiDB {
     static String user="root";
     static String pass="";
-    static String url="jdbc:mysql://localhost/dbuniv";
+    static String url="jdbc:mysql://localhost/dbuniv4";
     //static String driver="com.mysql.cj.jdbc.Driver";
     public  static Connection getConn(){
         Connection conn=null;

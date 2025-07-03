@@ -29,7 +29,11 @@ public class MenuController implements Initializable{
     private Button btnMatkul;
 
     @FXML
+    private Button btnDosen;
+
+    @FXML
     private Button btnJadwal;
+    
     @FXML
     private Button btnKrs;
 
@@ -37,7 +41,6 @@ public class MenuController implements Initializable{
     void home(ActionEvent event) {
 
     }
-
 
     @FXML
     void p1(ActionEvent event) {
@@ -53,14 +56,17 @@ public class MenuController implements Initializable{
     void p3(ActionEvent event) {
 
     }
+    
     @FXML
     private StackPane contentArea;
 
     @FXML
     private Label lbTeks;
+    
     public void logout(ActionEvent event){
         DBUtil.changeScene(event, "fLogin.fxml", "Login", null);
     }
+    
     public void initialize(URL location,ResourceBundle resources) {
         /* 
         try {
@@ -73,42 +79,54 @@ public class MenuController implements Initializable{
         }
         */
     }
+    
     @FXML
     public void homee() throws IOException {
         Parent fxml = FXMLLoader.load(getClass().getResource("fHome.fxml"));
         contentArea.getChildren().removeAll();
         contentArea.getChildren().setAll(fxml);
     }
+    
     @FXML
     public void mhs() throws IOException {
-        //Parent fxml = FXMLLoader.load(getClass().getResource("fproductSearch.fxml"));
         Parent fxml = FXMLLoader.load(getClass().getResource("fmhs.fxml"));
         contentArea.getChildren().removeAll();
         contentArea.getChildren().setAll(fxml);
     }
+    
     @FXML
     public void matkul() throws IOException {
-        //Parent fxml = FXMLLoader.load(getClass().getResource("fJadwal.fxml"));
         Parent fxml = FXMLLoader.load(getClass().getResource("fMatkul.fxml"));
         contentArea.getChildren().removeAll();
         contentArea.getChildren().setAll(fxml);
     }
+    
+    @FXML
+    public void dosen() throws IOException {
+        Parent fxml = FXMLLoader.load(getClass().getResource("fDosen.fxml"));
+        contentArea.getChildren().removeAll();
+        contentArea.getChildren().setAll(fxml);
+    }
+    
     @FXML
     public void jadwal() throws IOException {
         Parent fxml = FXMLLoader.load(getClass().getResource("fJadwal.fxml"));
         contentArea.getChildren().removeAll();
         contentArea.getChildren().setAll(fxml);
     }
+    
     @FXML
     public void krs() throws IOException {
         Parent fxml = FXMLLoader.load(getClass().getResource("fKrs.fxml"));
         contentArea.getChildren().removeAll();
         contentArea.getChildren().setAll(fxml);
     }
+    
     @FXML
     public void selesai(ActionEvent event) throws IOException {
          DBUtil.changeScene(event, "fLogin.fxml", "Login", null);
     }
+    
     public void setUserInfo(String userName) {
        lbTeks.setText("Selamat Datang " + userName);
     }
